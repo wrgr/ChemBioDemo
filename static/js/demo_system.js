@@ -300,7 +300,13 @@ function setupDemoOverlays() {
     }
 }
 
+// Legacy compatibility function 
+function runDemo() {
+    startEnhancedDemo();
+}
+
 // Export for global access
 window.startEnhancedDemo = startEnhancedDemo;
+window.runDemo = runDemo;
 window.demoData = demoData;
 window.demoHighlights = demoHighlights;
