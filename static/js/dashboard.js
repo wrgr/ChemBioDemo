@@ -286,7 +286,7 @@ function submitFile() {
         return;
     }
     
-    // Hide modal first to prevent auto-closing
+    // Hide modal after successful validation
     const uploadModal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
     if (uploadModal) {
         uploadModal.hide();
