@@ -355,15 +355,25 @@ function startAnalysis(sceneData, description) {
         }
     };
     
-    // Send analysis request
+    // Send analysis request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+    
     fetch('/api/analyze', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(analysisData)
+        body: JSON.stringify(analysisData),
+        signal: controller.signal
     })
-    .then(response => response.json())
+    .then(response => {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error(`Analysis request failed: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         hideAnalysisProgress();
         
@@ -372,15 +382,23 @@ function startAnalysis(sceneData, description) {
             currentAnalysis = data.analysis_results;
             updateAnalysisDisplay(data.analysis_results);
         } else {
+            console.error('Analysis failed:', data.error);
             showAlert(data.error || 'Analysis failed', 'danger');
             // Show upload area again on analysis failure
             resetUploadArea();
         }
     })
     .catch(error => {
+        clearTimeout(timeoutId);
         hideAnalysisProgress();
         console.error('Analysis error:', error);
-        showAlert('Analysis failed: ' + error.message, 'danger');
+        
+        if (error.name === 'AbortError') {
+            showAlert('Analysis timed out. Please try again with a smaller image.', 'warning');
+        } else {
+            showAlert('Analysis failed: ' + error.message, 'danger');
+        }
+        
         // Show upload area again on analysis failure
         resetUploadArea();
     });
