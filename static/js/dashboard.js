@@ -31,9 +31,19 @@ function initializeDashboard() {
 
 // Initialize Bootstrap modals
 function initializeModals() {
-    uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
-    youtubeModal = new bootstrap.Modal(document.getElementById('youtubeModal'));
-    communicationModal = new bootstrap.Modal(document.getElementById('communicationModal'));
+    const uploadModalElement = document.getElementById('uploadModal');
+    const youtubeModalElement = document.getElementById('youtubeModal');
+    const communicationModalElement = document.getElementById('communicationModal');
+    
+    if (uploadModalElement) {
+        uploadModal = new bootstrap.Modal(uploadModalElement);
+    }
+    if (youtubeModalElement) {
+        youtubeModal = new bootstrap.Modal(youtubeModalElement);
+    }
+    if (communicationModalElement) {
+        communicationModal = new bootstrap.Modal(communicationModalElement);
+    }
 }
 
 // Setup drag and drop functionality
@@ -41,9 +51,16 @@ function setupDragDrop() {
     const uploadArea = document.getElementById('uploadArea');
     const hiddenFileInput = document.getElementById('hiddenFileInput');
     
+    if (!uploadArea) {
+        console.log('Upload area not found');
+        return;
+    }
+    
     // Click handler
     uploadArea.addEventListener('click', function() {
-        hiddenFileInput.click();
+        if (hiddenFileInput) {
+            hiddenFileInput.click();
+        }
     });
     
     // Drag and drop handlers
