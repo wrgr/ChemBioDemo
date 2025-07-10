@@ -764,15 +764,17 @@ function updateAnalysisDisplay(analysisResults) {
 function updateSceneSummary(analysisResults) {
     const sceneSummary = document.getElementById('sceneSummary');
     const sceneSummaryContent = document.getElementById('sceneSummaryContent');
+    const sceneSummaryEmpty = document.getElementById('sceneSummaryEmpty');
     
     if (!analysisResults || analysisResults.status === 'error') {
         sceneSummary.style.display = 'none';
+        if (sceneSummaryEmpty) sceneSummaryEmpty.style.display = 'block';
         return;
     }
     
-    // Show scene summary
+    // Hide empty state and show summary
+    if (sceneSummaryEmpty) sceneSummaryEmpty.style.display = 'none';
     sceneSummary.style.display = 'block';
-    sceneSummary.className = 'alert alert-info';
     
     // Get the most significant findings
     let summaryHtml = '';
@@ -783,6 +785,11 @@ function updateSceneSummary(analysisResults) {
         const threatLevel = overallAssessment.threat_level || 'UNKNOWN';
         const threatBadge = getThreatBadge(threatLevel);
         summaryHtml += `<div class="mb-2"><strong>Threat Level:</strong> ${threatBadge}</div>`;
+        
+        // Add overall summary
+        if (overallAssessment.summary) {
+            summaryHtml += `<div class="mb-3">${overallAssessment.summary}</div>`;
+        }
     }
     
     // Key findings from synthesis

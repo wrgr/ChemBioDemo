@@ -50,17 +50,6 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <!-- Scene Summary -->
-                                <div id="sceneSummary" class="alert alert-info mb-3" style="display: none;">
-                                    <h6 class="alert-heading">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Scene Summary
-                                    </h6>
-                                    <div id="sceneSummaryContent">
-                                        <!-- Will be populated with AI analysis -->
-                                    </div>
-                                </div>
-                                
                                 <!-- File Upload Area -->
                                 <div id="uploadArea" class="border-2 border-dashed border-secondary rounded p-4 text-center mb-3" 
                                      style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
@@ -268,6 +257,27 @@
                     
                     <!-- Command Information Panel -->
                     <div class="col-lg-4">
+                        <!-- Scene Summary -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Scene Summary
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="sceneSummary" style="display: none;">
+                                    <div id="sceneSummaryContent">
+                                        <!-- Will be populated with AI analysis -->
+                                    </div>
+                                </div>
+                                <div id="sceneSummaryEmpty" class="text-center py-3">
+                                    <i class="bi bi-clipboard-data display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">Scene summary will appear here after analysis</p>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Communication -->
                         <div class="card mb-3">
                             <div class="card-header d-flex justify-content-between align-items-center">

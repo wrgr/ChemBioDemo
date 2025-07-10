@@ -120,7 +120,6 @@ function updateMoppLevel(analysisResults) {
     if (!moppData) return;
     
     const level = moppData.metadata?.mopp_level || '3';
-    const confidence = Math.round(moppData.confidence * 100);
     
     moppLevel.innerHTML = `
         <div class="text-center">
@@ -154,7 +153,7 @@ function updateHazardAssessment(analysisResults) {
         </div>
         <div class="hazard-findings">
             <h6 class="small fw-bold text-muted mb-2">KEY THREATS:</h6>
-            ${formatFindingsList(hazardData.findings.slice(0, 3))}
+            ${formatSimpleFindingsList(hazardData.findings.slice(0, 3))}
         </div>
     `;
 }
@@ -167,6 +166,9 @@ function updateSynthesisIntelligence(analysisResults) {
     const synthesisData = analysisResults.agent_analysis?.agent_results?.synthesis_analysis;
     if (!synthesisData) return;
     
+    // Get potential product information
+    const potentialProduct = getSynthesisProduct(synthesisData);
+    
     synthesisIntelligence.innerHTML = `
         <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -176,10 +178,11 @@ function updateSynthesisIntelligence(analysisResults) {
                 ${formatConfidence(synthesisData.confidence)}
             </div>
             <div class="mb-2">${formatThreatLevel(synthesisData.hazard_level)}</div>
+            ${potentialProduct ? `<div class="alert alert-danger py-2 mb-2"><small><strong>Suspected Product:</strong> ${potentialProduct}</small></div>` : ''}
         </div>
         <div class="synthesis-findings">
             <h6 class="small fw-bold text-muted mb-2">INDICATORS:</h6>
-            ${formatFindingsList(synthesisData.findings.slice(0, 3))}
+            ${formatSimpleFindingsList(synthesisData.findings.slice(0, 3))}
         </div>
     `;
 }
@@ -204,7 +207,7 @@ function updateSamplingStrategy(analysisResults) {
         </div>
         <div class="sampling-findings">
             <h6 class="small fw-bold text-muted mb-2">SAMPLE POINTS:</h6>
-            ${formatFindingsList(samplingData.findings.slice(0, 3))}
+            ${formatSimpleFindingsList(samplingData.findings.slice(0, 3))}
         </div>
     `;
 }
@@ -287,6 +290,55 @@ function formatRecommendationsList(recommendations) {
             </div>
         </div>
     `).join('');
+}
+
+function formatSimpleFindingsList(findings) {
+    if (!findings || findings.length === 0) {
+        return '<p class="text-muted small">No findings to display</p>';
+    }
+    
+    return findings.map(finding => `
+        <div class="mb-2">
+            <small><i class="bi bi-exclamation-triangle text-warning me-2"></i>${finding}</small>
+        </div>
+    `).join('');
+}
+
+function getSynthesisProduct(synthesisData) {
+    if (!synthesisData || !synthesisData.findings) return null;
+    
+    const findings = synthesisData.findings.join(' ').toLowerCase();
+    
+    // Check for specific drug/chemical indicators
+    if (findings.includes('fentanyl') || findings.includes('precursor') && findings.includes('opioid')) {
+        return 'Fentanyl';
+    }
+    if (findings.includes('methamphetamine') || findings.includes('meth') || 
+        (findings.includes('ephedrine') && findings.includes('reduction'))) {
+        return 'Methamphetamine';
+    }
+    if (findings.includes('cocaine') || findings.includes('coca')) {
+        return 'Cocaine';
+    }
+    if (findings.includes('mdma') || findings.includes('ecstasy') || findings.includes('methylenedioxy')) {
+        return 'MDMA/Ecstasy';
+    }
+    if (findings.includes('heroin') || findings.includes('morphine') && findings.includes('acetyl')) {
+        return 'Heroin';
+    }
+    if (findings.includes('explosive') || findings.includes('nitrate') || findings.includes('peroxide')) {
+        return 'Explosive Material';
+    }
+    if (findings.includes('chemical weapon') || findings.includes('nerve agent')) {
+        return 'Chemical Weapon';
+    }
+    
+    // Generic synthesis indicators
+    if (findings.includes('distillation') && findings.includes('precursor')) {
+        return 'Unknown Controlled Substance';
+    }
+    
+    return null;
 }
 
 // Universal overlay toggle function (for demo and regular use)
