@@ -150,6 +150,12 @@ function setupGlobalEventHandlers() {
         updateSensorDisplay(data.sensor_data);
     };
     
+    // Global communication handler
+    window.handleCommunicationReceived = function(data) {
+        console.log('Communication received:', data);
+        addCommunicationToDisplay(data);
+    };
+    
     // Global message handler
     window.handleMessageReceived = function(data) {
         console.log('Received message:', data);
@@ -1190,3 +1196,159 @@ window.toggleOverlay = toggleOverlay;
 window.handleFileSelect = handleFileSelect;
 window.showHighlightDetails = showHighlightDetails;
 window.showYouTubeInput = showYouTubeInput;
+window.resetToUpload = resetToUpload;
+
+// Reset to upload function
+function resetToUpload() {
+    console.log('Resetting to upload area...');
+    
+    // Hide scene display
+    const sceneDisplay = document.getElementById('sceneDisplay');
+    if (sceneDisplay) {
+        sceneDisplay.style.display = 'none';
+    }
+    
+    // Show upload area
+    const uploadArea = document.getElementById('uploadArea');
+    if (uploadArea) {
+        uploadArea.style.display = 'flex';
+    }
+    
+    // Clear scene data
+    clearSceneData();
+    
+    // Reset analysis displays
+    resetAnalysisDisplays();
+    
+    // Hide YouTube input if visible
+    const youtubeInput = document.getElementById('youtubeInput');
+    if (youtubeInput) {
+        youtubeInput.style.display = 'none';
+    }
+    
+    // Clear analysis progress
+    const analysisProgress = document.getElementById('analysisProgress');
+    if (analysisProgress) {
+        analysisProgress.style.display = 'none';
+    }
+    
+    // Reset overlay states
+    resetOverlayStates();
+    
+    console.log('Reset to upload complete');
+}
+
+// Clear scene data
+function clearSceneData() {
+    const sceneImage = document.getElementById('sceneImage');
+    const sceneVideo = document.getElementById('sceneVideo');
+    
+    if (sceneImage) {
+        sceneImage.src = '';
+        sceneImage.style.display = 'none';
+    }
+    
+    if (sceneVideo) {
+        sceneVideo.src = '';
+        sceneVideo.style.display = 'none';
+    }
+    
+    // Clear global analysis data
+    currentAnalysis = null;
+    window.currentAnalysis = null;
+}
+
+// Reset analysis displays
+function resetAnalysisDisplays() {
+    // Reset tactical displays
+    resetTacticalDisplays();
+    
+    // Reset command displays
+    resetCommandDisplays();
+    
+    // Reset scene summary
+    const sceneSummaryContent = document.getElementById('sceneSummaryContent');
+    if (sceneSummaryContent) {
+        sceneSummaryContent.innerHTML = '<div class="text-muted">Upload a scene to begin analysis</div>';
+    }
+}
+
+// Reset tactical displays
+function resetTacticalDisplays() {
+    const moppLevel = document.getElementById('moppLevel');
+    if (moppLevel) {
+        moppLevel.innerHTML = `
+            <i class="bi bi-hourglass-split display-4 text-muted"></i>
+            <p class="text-muted mt-2">Upload scene for MOPP assessment</p>
+        `;
+    }
+    
+    const hazardAssessment = document.getElementById('hazardAssessment');
+    if (hazardAssessment) {
+        hazardAssessment.innerHTML = `
+            <i class="bi bi-exclamation-triangle display-4 text-muted"></i>
+            <p class="text-muted mt-2">Awaiting threat analysis</p>
+        `;
+    }
+    
+    const synthesisIntelligence = document.getElementById('synthesisIntelligence');
+    if (synthesisIntelligence) {
+        synthesisIntelligence.innerHTML = `
+            <i class="bi bi-flask display-4 text-muted"></i>
+            <p class="text-muted mt-2">No synthesis activity detected</p>
+        `;
+    }
+    
+    const samplingStrategy = document.getElementById('samplingStrategy');
+    if (samplingStrategy) {
+        samplingStrategy.innerHTML = `
+            <i class="bi bi-droplet display-4 text-muted"></i>
+            <p class="text-muted mt-2">Sampling strategy pending</p>
+        `;
+    }
+    
+    const immediateActions = document.getElementById('immediateActions');
+    if (immediateActions) {
+        immediateActions.innerHTML = `
+            <i class="bi bi-list-check display-4 text-muted"></i>
+            <p class="text-muted mt-2">Actions will appear after analysis</p>
+        `;
+    }
+}
+
+// Reset command displays
+function resetCommandDisplays() {
+    const analysisOverview = document.getElementById('analysisOverview');
+    if (analysisOverview) {
+        analysisOverview.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-graph-up display-4 text-muted"></i>
+                <p class="text-muted mt-2">Analysis overview will appear here</p>
+            </div>
+        `;
+    }
+    
+    const agentAnalysis = document.getElementById('agentAnalysis');
+    if (agentAnalysis) {
+        agentAnalysis.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-robot display-4 text-muted"></i>
+                <p class="text-muted mt-2">Agent analysis will appear here</p>
+            </div>
+        `;
+    }
+}
+
+// Reset overlay states
+function resetOverlayStates() {
+    const overlayButtons = document.querySelectorAll('.overlay-toggle');
+    overlayButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Clear any overlay containers
+    const overlayContainers = document.querySelectorAll('.overlay-container');
+    overlayContainers.forEach(container => {
+        container.innerHTML = '';
+    });
+}

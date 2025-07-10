@@ -88,6 +88,19 @@
                                 
                                 <!-- Scene Image/Video Display -->
                                 <div id="sceneDisplay" class="scene-container" style="display: none;">
+                                    <!-- New Upload Button -->
+                                    <div class="upload-controls mb-3">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="resetToUpload()">
+                                            <i class="bi bi-plus-circle"></i> New Upload
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="showYouTubeInput()">
+                                            <i class="bi bi-youtube"></i> YouTube
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm" onclick="startEnhancedDemo()">
+                                            <i class="bi bi-play-circle"></i> Demo
+                                        </button>
+                                    </div>
+                                    
                                     <img id="sceneImage" class="scene-image img-fluid rounded w-100" style="max-height: 500px; object-fit: contain;">
                                     <video id="sceneVideo" class="scene-image w-100 rounded" style="max-height: 500px; display: none;" controls>
                                         Your browser does not support the video tag.
