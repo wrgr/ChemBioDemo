@@ -142,50 +142,82 @@
                     
                     <!-- Tactical Information Panel -->
                     <div class="col-lg-4">
-                        <!-- Threat Assessment -->
+                        <!-- MOPP Level -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-shield-check me-2"></i>
+                                    MOPP Level
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="moppLevel" class="text-center py-4">
+                                    <i class="bi bi-hourglass-split display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">Upload scene for MOPP assessment</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hazard Assessment -->
                         <div class="card mb-3">
                             <div class="card-header">
                                 <h6 class="card-title mb-0">
                                     <i class="bi bi-shield-exclamation me-2"></i>
-                                    Threat Assessment
+                                    Hazard Assessment
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <div id="threatAssessment" class="text-center py-4">
-                                    <i class="bi bi-hourglass-split display-4 text-muted"></i>
-                                    <p class="text-muted mt-2">Upload scene for analysis</p>
+                                <div id="hazardAssessment" class="text-center py-4">
+                                    <i class="bi bi-exclamation-triangle display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">Awaiting threat analysis</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Next Steps -->
+                        <!-- Synthesis Intelligence -->
                         <div class="card mb-3">
                             <div class="card-header">
                                 <h6 class="card-title mb-0">
-                                    <i class="bi bi-list-check me-2"></i>
-                                    Next Steps
+                                    <i class="bi bi-flask me-2"></i>
+                                    Synthesis Intelligence
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <div id="nextSteps" class="text-center py-4">
-                                    <i class="bi bi-clipboard-check display-4 text-muted"></i>
-                                    <p class="text-muted mt-2">Awaiting analysis results</p>
+                                <div id="synthesisIntelligence" class="text-center py-4">
+                                    <i class="bi bi-flask display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">No synthesis activity detected</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Key Findings -->
-                        <div class="card">
+                        <!-- Sampling Strategy -->
+                        <div class="card mb-3">
                             <div class="card-header">
                                 <h6 class="card-title mb-0">
-                                    <i class="bi bi-search me-2"></i>
-                                    Key Findings
+                                    <i class="bi bi-droplet me-2"></i>
+                                    Sampling Strategy
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <div id="keyFindings" class="text-center py-4">
-                                    <i class="bi bi-file-earmark-text display-4 text-muted"></i>
-                                    <p class="text-muted mt-2">No findings yet</p>
+                                <div id="samplingStrategy" class="text-center py-4">
+                                    <i class="bi bi-droplet display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">No sampling points identified</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Immediate Actions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-list-check me-2"></i>
+                                    Immediate Actions
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="immediateActions" class="text-center py-4">
+                                    <i class="bi bi-clipboard-check display-4 text-muted"></i>
+                                    <p class="text-muted mt-2">Awaiting analysis results</p>
                                 </div>
                             </div>
                         </div>

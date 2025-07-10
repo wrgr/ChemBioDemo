@@ -133,10 +133,11 @@ function demoOverlaySystem() {
         // Update analysis display
         updateAnalysisDisplay(demoAnalysis.analysis_results);
         
-        // Also update tactical analysis display
-        if (typeof updateTacticalAnalysis === 'function') {
-            updateTacticalAnalysis(demoAnalysis.analysis_results);
-        }
+        // Force update all tactical analysis components
+        updateTacticalAnalysisComponents(demoAnalysis.analysis_results);
+        
+        // Show scene summary
+        showSceneSummary(demoAnalysis.tactical_summary);
         
         // Create demo overlay highlights
         createDemoOverlays();
@@ -268,6 +269,95 @@ function createFallbackImage() {
     // Convert to data URL and set as image source
     sceneImage.src = canvas.toDataURL();
     console.log('Created fallback demo image');
+}
+
+// Update tactical analysis components specifically for demo
+function updateTacticalAnalysisComponents(analysisResults) {
+    console.log('Updating tactical analysis components...', analysisResults);
+    
+    // Update MOPP Level
+    const moppElement = document.getElementById('moppLevel');
+    if (moppElement && analysisResults.agent_analysis?.agent_results?.mopp_recommendation) {
+        const moppData = analysisResults.agent_analysis.agent_results.mopp_recommendation;
+        moppElement.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <span>MOPP Level ${moppData.metadata?.mopp_level || '3'}</span>
+                <span class="badge bg-warning">${(moppData.confidence * 100).toFixed(0)}%</span>
+            </div>
+            <small class="text-muted">${moppData.hazard_level} threat environment</small>
+        `;
+    }
+    
+    // Update Hazard Assessment
+    const hazardElement = document.getElementById('hazardAssessment');
+    if (hazardElement && analysisResults.agent_analysis?.agent_results?.hazard_detection) {
+        const hazardData = analysisResults.agent_analysis.agent_results.hazard_detection;
+        hazardElement.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold">Threat Level: ${hazardData.hazard_level}</span>
+                <span class="badge bg-danger">${(hazardData.confidence * 100).toFixed(0)}%</span>
+            </div>
+            <ul class="list-unstyled mb-0">
+                ${hazardData.findings.slice(0, 3).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
+            </ul>
+        `;
+    }
+    
+    // Update Synthesis Intelligence
+    const synthesisElement = document.getElementById('synthesisIntelligence');
+    if (synthesisElement && analysisResults.agent_analysis?.agent_results?.synthesis_analysis) {
+        const synthesisData = analysisResults.agent_analysis.agent_results.synthesis_analysis;
+        synthesisElement.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold">Synthesis Activity</span>
+                <span class="badge bg-warning">${(synthesisData.confidence * 100).toFixed(0)}%</span>
+            </div>
+            <ul class="list-unstyled mb-0">
+                ${synthesisData.findings.slice(0, 3).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
+            </ul>
+        `;
+    }
+    
+    // Update Sampling Strategy
+    const samplingElement = document.getElementById('samplingStrategy');
+    if (samplingElement && analysisResults.agent_analysis?.agent_results?.sampling_strategy) {
+        const samplingData = analysisResults.agent_analysis.agent_results.sampling_strategy;
+        samplingElement.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold">Sample Points</span>
+                <span class="badge bg-info">${(samplingData.confidence * 100).toFixed(0)}%</span>
+            </div>
+            <ul class="list-unstyled mb-0">
+                ${samplingData.findings.slice(0, 2).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
+            </ul>
+        `;
+    }
+    
+    // Update Immediate Actions
+    const actionsElement = document.getElementById('immediateActions');
+    if (actionsElement && analysisResults.actionable_intelligence?.immediate_actions) {
+        actionsElement.innerHTML = `
+            <ul class="list-unstyled mb-0">
+                ${analysisResults.actionable_intelligence.immediate_actions.map(action => 
+                    `<li class="mb-1"><small>• ${action}</small></li>`
+                ).join('')}
+            </ul>
+        `;
+    }
+    
+    console.log('Tactical analysis components updated successfully');
+}
+
+// Show scene summary
+function showSceneSummary(summary) {
+    const sceneSummaryElement = document.getElementById('sceneSummary');
+    const sceneSummaryContent = document.getElementById('sceneSummaryContent');
+    
+    if (sceneSummaryElement && sceneSummaryContent && summary) {
+        sceneSummaryContent.innerHTML = `<p class="mb-0">${summary}</p>`;
+        sceneSummaryElement.style.display = 'block';
+        console.log('Scene summary displayed:', summary);
+    }
 }
 
 // Export for global access
