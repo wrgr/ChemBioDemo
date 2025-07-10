@@ -451,6 +451,44 @@ function showAnalysisProgress() {
     if (progressText) {
         progressText.textContent = 'Analyzing scene...';
     }
+    
+    // Start progress simulation
+    simulateAnalysisProgress();
+}
+
+function simulateAnalysisProgress() {
+    const progressBar = document.querySelector('#analysisProgress .progress-bar');
+    const progressText = document.querySelector('#analysisProgress span');
+    
+    if (!progressBar || !progressText) return;
+    
+    let progress = 0;
+    const steps = [
+        { progress: 10, text: 'Preprocessing image...' },
+        { progress: 25, text: 'Initializing AI agents...' },
+        { progress: 40, text: 'Running hazard detection...' },
+        { progress: 55, text: 'Analyzing chemical synthesis...' },
+        { progress: 70, text: 'Assessing MOPP requirements...' },
+        { progress: 85, text: 'Generating sampling strategy...' },
+        { progress: 95, text: 'Finalizing analysis...' }
+    ];
+    
+    let currentStep = 0;
+    
+    const updateProgress = () => {
+        if (currentStep < steps.length) {
+            const step = steps[currentStep];
+            progressBar.style.width = step.progress + '%';
+            progressText.textContent = step.text;
+            currentStep++;
+            
+            // Variable timing to simulate real processing
+            const delay = Math.random() * 8000 + 5000; // 5-13 seconds per step
+            setTimeout(updateProgress, delay);
+        }
+    };
+    
+    updateProgress();
 }
 
 function hideAnalysisProgress() {

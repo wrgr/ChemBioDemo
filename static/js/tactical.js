@@ -119,12 +119,20 @@ function updateMoppLevel(analysisResults) {
     const moppData = analysisResults.agent_analysis?.agent_results?.mopp_recommendation;
     if (!moppData) return;
     
+    const level = moppData.metadata?.mopp_level || '3';
+    const confidence = Math.round(moppData.confidence * 100);
+    
     moppLevel.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center">
-            <span>MOPP Level ${moppData.metadata?.mopp_level || '3'}</span>
-            <span class="badge bg-warning">${(moppData.confidence * 100).toFixed(0)}%</span>
+        <div class="text-center">
+            <div class="display-1 fw-bold text-warning">${level}</div>
+            <div class="fw-bold mb-2">MOPP Level ${level}</div>
+            <div class="mb-2">${formatThreatLevel(moppData.hazard_level)}</div>
+            <div class="mb-2">${formatConfidence(moppData.confidence)}</div>
+            <div class="small text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Protection Required
+            </div>
         </div>
-        <small class="text-muted">${moppData.hazard_level} threat environment</small>
     `;
 }
 
@@ -137,13 +145,17 @@ function updateHazardAssessment(analysisResults) {
     if (!hazardData) return;
     
     hazardAssessment.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold">Threat Level: ${hazardData.hazard_level}</span>
-            <span class="badge bg-danger">${(hazardData.confidence * 100).toFixed(0)}%</span>
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0">Threat Assessment</h6>
+                ${formatConfidence(hazardData.confidence)}
+            </div>
+            <div class="mb-2">${formatThreatLevel(hazardData.hazard_level)}</div>
         </div>
-        <ul class="list-unstyled mb-0">
-            ${hazardData.findings.slice(0, 3).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
-        </ul>
+        <div class="hazard-findings">
+            <h6 class="small fw-bold text-muted mb-2">KEY THREATS:</h6>
+            ${formatFindingsList(hazardData.findings.slice(0, 3))}
+        </div>
     `;
 }
 
@@ -156,13 +168,19 @@ function updateSynthesisIntelligence(analysisResults) {
     if (!synthesisData) return;
     
     synthesisIntelligence.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold">Synthesis Activity</span>
-            <span class="badge bg-warning">${(synthesisData.confidence * 100).toFixed(0)}%</span>
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-flask me-2"></i>Synthesis Activity
+                </h6>
+                ${formatConfidence(synthesisData.confidence)}
+            </div>
+            <div class="mb-2">${formatThreatLevel(synthesisData.hazard_level)}</div>
         </div>
-        <ul class="list-unstyled mb-0">
-            ${synthesisData.findings.slice(0, 3).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
-        </ul>
+        <div class="synthesis-findings">
+            <h6 class="small fw-bold text-muted mb-2">INDICATORS:</h6>
+            ${formatFindingsList(synthesisData.findings.slice(0, 3))}
+        </div>
     `;
 }
 
@@ -175,13 +193,19 @@ function updateSamplingStrategy(analysisResults) {
     if (!samplingData) return;
     
     samplingStrategy.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold">Sample Points</span>
-            <span class="badge bg-info">${(samplingData.confidence * 100).toFixed(0)}%</span>
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-droplet me-2"></i>Sampling Strategy
+                </h6>
+                ${formatConfidence(samplingData.confidence)}
+            </div>
+            <div class="mb-2">${formatThreatLevel(samplingData.hazard_level)}</div>
         </div>
-        <ul class="list-unstyled mb-0">
-            ${samplingData.findings.slice(0, 2).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
-        </ul>
+        <div class="sampling-findings">
+            <h6 class="small fw-bold text-muted mb-2">SAMPLE POINTS:</h6>
+            ${formatFindingsList(samplingData.findings.slice(0, 3))}
+        </div>
     `;
 }
 
@@ -190,14 +214,79 @@ function updateImmediateActions(analysisResults) {
     const immediateActions = document.getElementById('immediateActions');
     if (!immediateActions) return;
     
-    const actionData = analysisResults.actionable_intelligence?.immediate_actions;
-    if (!actionData) return;
+    // Get recommendations from multiple agents
+    const agentResults = analysisResults.agent_analysis?.agent_results || {};
+    const allRecommendations = [];
+    
+    // Collect urgent recommendations from all agents
+    Object.values(agentResults).forEach(agentResult => {
+        if (agentResult.recommendations) {
+            allRecommendations.push(...agentResult.recommendations.slice(0, 2));
+        }
+    });
     
     immediateActions.innerHTML = `
-        <ul class="list-unstyled mb-0">
-            ${actionData.map(action => `<li class="mb-1"><small>• ${action}</small></li>`).join('')}
-        </ul>
+        <div class="mb-3">
+            <h6 class="fw-bold mb-2">
+                <i class="bi bi-clipboard-check me-2"></i>Immediate Actions
+            </h6>
+        </div>
+        <div class="actions-list">
+            ${formatRecommendationsList(allRecommendations.slice(0, 4))}
+        </div>
     `;
+}
+
+// Formatting helper functions
+function formatConfidence(confidence) {
+    const percentage = Math.round(confidence * 100);
+    let badgeClass = 'bg-secondary';
+    
+    if (percentage >= 80) badgeClass = 'bg-success';
+    else if (percentage >= 60) badgeClass = 'bg-warning';
+    else if (percentage >= 40) badgeClass = 'bg-danger';
+    
+    return `<span class="badge ${badgeClass}">${percentage}% confidence</span>`;
+}
+
+function formatThreatLevel(level) {
+    const levelMap = {
+        'CRITICAL': { class: 'bg-danger', icon: 'bi-exclamation-triangle-fill' },
+        'HIGH': { class: 'bg-warning', icon: 'bi-exclamation-triangle' },
+        'MEDIUM': { class: 'bg-info', icon: 'bi-info-circle' },
+        'LOW': { class: 'bg-success', icon: 'bi-check-circle' },
+        'UNKNOWN': { class: 'bg-secondary', icon: 'bi-question-circle' }
+    };
+    
+    const config = levelMap[level] || levelMap['UNKNOWN'];
+    return `<span class="badge ${config.class}"><i class="${config.icon} me-1"></i>${level}</span>`;
+}
+
+function formatFindingsList(findings) {
+    if (!findings || findings.length === 0) {
+        return '<p class="text-muted small">No findings to display</p>';
+    }
+    
+    return findings.map(finding => `
+        <div class="alert alert-light border-start border-info border-3 mb-2 py-2">
+            <small><i class="bi bi-info-circle text-info me-2"></i>${finding}</small>
+        </div>
+    `).join('');
+}
+
+function formatRecommendationsList(recommendations) {
+    if (!recommendations || recommendations.length === 0) {
+        return '<p class="text-muted small">No recommendations available</p>';
+    }
+    
+    return recommendations.map((rec, index) => `
+        <div class="alert alert-warning border-start border-warning border-3 mb-2 py-2">
+            <div class="d-flex align-items-start">
+                <span class="badge bg-warning text-dark me-2">${index + 1}</span>
+                <small>${rec}</small>
+            </div>
+        </div>
+    `).join('');
 }
 
 // Universal overlay toggle function (for demo and regular use)
