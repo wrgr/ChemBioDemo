@@ -113,7 +113,13 @@ function demoOverlaySystem() {
     const uploadArea = document.getElementById('uploadArea');
     
     if (sceneImage && sceneDisplay && uploadArea) {
-        // Load demo image
+        // Load demo image with error handling
+        sceneImage.onerror = function() {
+            console.error('Failed to load demo image:', sceneImage.src);
+            // Create a simple demo image as fallback
+            createFallbackImage();
+        };
+        
         sceneImage.src = '/uploads/demo_chemical_lab.png';
         sceneImage.style.display = 'block';
         
@@ -127,11 +133,20 @@ function demoOverlaySystem() {
         // Update analysis display
         updateAnalysisDisplay(demoAnalysis.analysis_results);
         
+        // Also update tactical analysis display
+        if (typeof updateTacticalAnalysis === 'function') {
+            updateTacticalAnalysis(demoAnalysis.analysis_results);
+        }
+        
         // Create demo overlay highlights
         createDemoOverlays();
         
+        // Show image immediately and set up overlays
+        console.log('Demo image loaded, setting up overlays...');
+        
         // Automatically show hazard overlays after image loads
         sceneImage.onload = function() {
+            console.log('Demo image loaded successfully, showing overlays...');
             setTimeout(() => {
                 console.log('Auto-showing hazard overlays for demo...');
                 if (typeof toggleOverlay === 'function') {
@@ -141,9 +156,16 @@ function demoOverlaySystem() {
                     setTimeout(() => toggleOverlay('synthesis'), 2000);
                     setTimeout(() => toggleOverlay('mopp'), 4000);
                     setTimeout(() => toggleOverlay('sampling'), 6000);
+                } else {
+                    console.error('toggleOverlay function not found');
                 }
             }, 1000);
         };
+        
+        // Force image load if already cached
+        if (sceneImage.complete) {
+            sceneImage.onload();
+        }
         
         console.log('Demo overlay system loaded successfully!');
         return true;
@@ -182,6 +204,70 @@ function createDemoOverlays() {
     // Store demo highlights globally
     window.demoHighlights = demoHighlights;
     console.log('Demo highlights created:', demoHighlights);
+}
+
+// Create fallback image if demo image fails to load
+function createFallbackImage() {
+    const sceneImage = document.getElementById('sceneImage');
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, 0, 800, 600);
+    
+    // Chemical equipment representations
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(100, 200, 100, 100);
+    ctx.fillStyle = '#4169E1';
+    ctx.fillRect(140, 150, 20, 50);
+    
+    // Distillation setup
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(300, 180, 50, 40);
+    ctx.beginPath();
+    ctx.moveTo(350, 200);
+    ctx.lineTo(400, 150);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Chemical containers
+    ctx.fillStyle = '#FF6B6B';
+    ctx.fillRect(500, 250, 50, 70);
+    ctx.fillStyle = '#FFD93D';
+    ctx.fillRect(570, 250, 50, 70);
+    ctx.fillStyle = '#6BCF7F';
+    ctx.fillRect(640, 250, 50, 70);
+    
+    // Warning symbols
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath();
+    ctx.moveTo(520, 230);
+    ctx.lineTo(510, 250);
+    ctx.lineTo(530, 250);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Ventilation duct
+    ctx.fillStyle = '#C0C0C0';
+    ctx.fillRect(50, 50, 700, 30);
+    
+    // Labels
+    ctx.fillStyle = '#000';
+    ctx.font = '14px Arial';
+    ctx.fillText('Chemical Lab Demo Scene', 50, 40);
+    ctx.fillText('Reaction Vessel', 120, 340);
+    ctx.fillText('Distillation', 300, 240);
+    ctx.fillText('Chemicals', 500, 340);
+    ctx.fillText('Ventilation', 50, 100);
+    
+    // Convert to data URL and set as image source
+    sceneImage.src = canvas.toDataURL();
+    console.log('Created fallback demo image');
 }
 
 // Export for global access

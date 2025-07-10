@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, send_from_directory
 import uuid
 import logging
+import os
 
 main_bp = Blueprint('main', __name__)
 logger = logging.getLogger(__name__)
@@ -45,3 +46,9 @@ def set_user_type():
         return jsonify({'status': 'success', 'user_type': user_type})
     else:
         return jsonify({'status': 'error', 'message': 'Invalid user type'}), 400
+
+@main_bp.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """Serve uploaded files"""
+    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
+    return send_from_directory(uploads_dir, filename)
