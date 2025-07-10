@@ -40,24 +40,57 @@ function initializeTacticalDisplay() {
 
 // Reset tactical display to initial state
 function resetTacticalDisplay() {
-    const threatAssessment = document.getElementById('threatAssessment');
-    const nextSteps = document.getElementById('nextSteps');
-    const keyFindings = document.getElementById('keyFindings');
+    // Update with new element IDs
+    const moppLevel = document.getElementById('moppLevel');
+    const hazardAssessment = document.getElementById('hazardAssessment');
+    const synthesisIntelligence = document.getElementById('synthesisIntelligence');
+    const samplingStrategy = document.getElementById('samplingStrategy');
+    const immediateActions = document.getElementById('immediateActions');
     
-    threatAssessment.innerHTML = `
-        <i class="bi bi-hourglass-split display-4 text-muted"></i>
-        <p class="text-muted mt-2">Upload scene for analysis</p>
-    `;
+    if (moppLevel) {
+        moppLevel.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-hourglass-split display-4 text-muted"></i>
+                <p class="text-muted mt-2">Upload scene for MOPP assessment</p>
+            </div>
+        `;
+    }
     
-    nextSteps.innerHTML = `
-        <i class="bi bi-clipboard-check display-4 text-muted"></i>
-        <p class="text-muted mt-2">Awaiting analysis results</p>
-    `;
+    if (hazardAssessment) {
+        hazardAssessment.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-exclamation-triangle display-4 text-muted"></i>
+                <p class="text-muted mt-2">Awaiting threat analysis</p>
+            </div>
+        `;
+    }
     
-    keyFindings.innerHTML = `
-        <i class="bi bi-file-earmark-text display-4 text-muted"></i>
-        <p class="text-muted mt-2">No findings yet</p>
-    `;
+    if (synthesisIntelligence) {
+        synthesisIntelligence.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-flask display-4 text-muted"></i>
+                <p class="text-muted mt-2">No synthesis activity detected</p>
+            </div>
+        `;
+    }
+    
+    if (samplingStrategy) {
+        samplingStrategy.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-droplet display-4 text-muted"></i>
+                <p class="text-muted mt-2">No sampling points identified</p>
+            </div>
+        `;
+    }
+    
+    if (immediateActions) {
+        immediateActions.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-clipboard-check display-4 text-muted"></i>
+                <p class="text-muted mt-2">Awaiting analysis results</p>
+            </div>
+        `;
+    }
 }
 
 // Update tactical analysis display
@@ -66,51 +99,111 @@ function updateTacticalAnalysis(analysisResults) {
     
     tacticalAnalysisResults = analysisResults;
     
-    // Update threat assessment
-    updateThreatAssessment(analysisResults);
-    
-    // Update next steps
-    updateNextSteps(analysisResults);
-    
-    // Update key findings
-    updateKeyFindings(analysisResults);
+    // Update all tactical components
+    updateMoppLevel(analysisResults);
+    updateHazardAssessment(analysisResults);
+    updateSynthesisIntelligence(analysisResults);
+    updateSamplingStrategy(analysisResults);
+    updateImmediateActions(analysisResults);
     
     // Show tactical summary alert
     showTacticalSummary(analysisResults);
 }
 
-// Update threat assessment display
+// Update MOPP Level display
+function updateMoppLevel(analysisResults) {
+    const moppLevel = document.getElementById('moppLevel');
+    if (!moppLevel) return;
+    
+    const moppData = analysisResults.agent_analysis?.agent_results?.mopp_recommendation;
+    if (!moppData) return;
+    
+    moppLevel.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <span>MOPP Level ${moppData.metadata?.mopp_level || '3'}</span>
+            <span class="badge bg-warning">${(moppData.confidence * 100).toFixed(0)}%</span>
+        </div>
+        <small class="text-muted">${moppData.hazard_level} threat environment</small>
+    `;
+}
+
+// Update Hazard Assessment display
+function updateHazardAssessment(analysisResults) {
+    const hazardAssessment = document.getElementById('hazardAssessment');
+    if (!hazardAssessment) return;
+    
+    const hazardData = analysisResults.agent_analysis?.agent_results?.hazard_detection;
+    if (!hazardData) return;
+    
+    hazardAssessment.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold">Threat Level: ${hazardData.hazard_level}</span>
+            <span class="badge bg-danger">${(hazardData.confidence * 100).toFixed(0)}%</span>
+        </div>
+        <ul class="list-unstyled mb-0">
+            ${hazardData.findings.slice(0, 3).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
+        </ul>
+    `;
+}
+
+// Update Synthesis Intelligence display
+function updateSynthesisIntelligence(analysisResults) {
+    const synthesisIntelligence = document.getElementById('synthesisIntelligence');
+    if (!synthesisIntelligence) return;
+    
+    const synthesisData = analysisResults.agent_analysis?.agent_results?.synthesis_analysis;
+    if (!synthesisData) return;
+    
+    synthesisIntelligence.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold">Synthesis Activity</span>
+            <span class="badge bg-warning">${(synthesisData.confidence * 100).toFixed(0)}%</span>
+        </div>
+        <ul class="list-unstyled mb-0">
+            ${synthesisData.findings.slice(0, 3).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
+        </ul>
+    `;
+}
+
+// Update Sampling Strategy display
+function updateSamplingStrategy(analysisResults) {
+    const samplingStrategy = document.getElementById('samplingStrategy');
+    if (!samplingStrategy) return;
+    
+    const samplingData = analysisResults.agent_analysis?.agent_results?.sampling_strategy;
+    if (!samplingData) return;
+    
+    samplingStrategy.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold">Sample Points</span>
+            <span class="badge bg-info">${(samplingData.confidence * 100).toFixed(0)}%</span>
+        </div>
+        <ul class="list-unstyled mb-0">
+            ${samplingData.findings.slice(0, 2).map(finding => `<li><small>• ${finding}</small></li>`).join('')}
+        </ul>
+    `;
+}
+
+// Update Immediate Actions display
+function updateImmediateActions(analysisResults) {
+    const immediateActions = document.getElementById('immediateActions');
+    if (!immediateActions) return;
+    
+    const actionData = analysisResults.actionable_intelligence?.immediate_actions;
+    if (!actionData) return;
+    
+    immediateActions.innerHTML = `
+        <ul class="list-unstyled mb-0">
+            ${actionData.map(action => `<li class="mb-1"><small>• ${action}</small></li>`).join('')}
+        </ul>
+    `;
+}
+
+// Legacy function for backward compatibility
 function updateThreatAssessment(analysisResults) {
-    const threatAssessment = document.getElementById('threatAssessment');
-    const overallAssessment = analysisResults.overall_assessment || {};
-    
-    const threatLevel = overallAssessment.threat_level || 'UNKNOWN';
-    const confidence = overallAssessment.overall_confidence || 0;
-    const operationType = overallAssessment.operation_type || 'UNKNOWN';
-    
-    const threatLevelClass = getThreatLevelClass(threatLevel);
-    const threatLevelIcon = getThreatLevelIcon(threatLevel);
-    const confidenceClass = getConfidenceClass(confidence);
-    
-    threatAssessment.innerHTML = `
-        <div class="text-center">
-            <i class="bi ${threatLevelIcon} display-3 ${threatLevelClass}"></i>
-            <h4 class="mt-2 ${threatLevelClass}">${threatLevel}</h4>
-            <p class="text-muted mb-2">${operationType.replace('_', ' ')}</p>
-            
-            <div class="row text-center">
-                <div class="col-6">
-                    <div class="border rounded p-2">
-                        <h6 class="mb-1">Confidence</h6>
-                        <div class="progress mb-1" style="height: 8px;">
-                            <div class="progress-bar ${confidenceClass}" 
-                                 style="width: ${confidence * 100}%"></div>
-                        </div>
-                        <small class="text-muted">${formatConfidence(confidence)}</small>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="border rounded p-2">
+    // This function is now handled by updateHazardAssessment
+    updateHazardAssessment(analysisResults);
+}
                         <h6 class="mb-1">MOPP Level</h6>
                         <div class="display-6 fw-bold ${threatLevelClass}">
                             ${getMOPPLevel(analysisResults)}
