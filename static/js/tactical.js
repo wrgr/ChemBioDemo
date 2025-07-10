@@ -17,10 +17,20 @@ function initializeTacticalOperations() {
 
 // Setup tactical event handlers
 function setupTacticalEventHandlers() {
-    // Overlay toggle handlers
-    document.getElementById('hazardOverlay').addEventListener('click', () => toggleTacticalOverlay('hazards'));
-    document.getElementById('samplingOverlay').addEventListener('click', () => toggleTacticalOverlay('sampling'));
-    document.getElementById('evidenceOverlay').addEventListener('click', () => toggleTacticalOverlay('evidence'));
+    // Check if overlay elements exist before adding event listeners
+    const hazardOverlay = document.getElementById('hazardOverlay');
+    const samplingOverlay = document.getElementById('samplingOverlay');
+    const evidenceOverlay = document.getElementById('evidenceOverlay');
+    
+    if (hazardOverlay) {
+        hazardOverlay.addEventListener('click', () => toggleTacticalOverlay('hazards'));
+    }
+    if (samplingOverlay) {
+        samplingOverlay.addEventListener('click', () => toggleTacticalOverlay('sampling'));
+    }
+    if (evidenceOverlay) {
+        evidenceOverlay.addEventListener('click', () => toggleTacticalOverlay('evidence'));
+    }
 }
 
 // Initialize tactical display
@@ -495,9 +505,196 @@ function getPriorityColor(priority) {
     }
 }
 
+// Universal overlay toggle function (for demo and regular use)
+function toggleOverlay(overlayType) {
+    console.log(`Toggling overlay: ${overlayType}`);
+    
+    const button = document.getElementById(overlayType + 'Overlay');
+    const isActive = button && button.classList.contains('active');
+    
+    if (isActive) {
+        console.log(`Hiding overlay: ${overlayType}`);
+        hideOverlay(overlayType);
+        activeOverlays.delete(overlayType);
+        if (button) button.classList.remove('active');
+    } else {
+        console.log(`Showing overlay: ${overlayType}`);
+        showOverlay(overlayType);
+        activeOverlays.add(overlayType);
+        if (button) button.classList.add('active');
+    }
+}
+
+// Show overlay highlights
+function showOverlay(overlayType) {
+    // Get highlights data from demo or analysis
+    let highlights = [];
+    
+    if (window.demoHighlights && window.demoHighlights[overlayType]) {
+        highlights = window.demoHighlights[overlayType];
+    } else if (tacticalAnalysisResults && tacticalAnalysisResults.highlights && tacticalAnalysisResults.highlights[overlayType]) {
+        highlights = tacticalAnalysisResults.highlights[overlayType];
+    }
+    
+    if (highlights.length === 0) {
+        console.log(`No highlights available for ${overlayType}`);
+        // Fall back to tactical overlay if no highlights
+        showTacticalOverlay(overlayType);
+        return;
+    }
+    
+    // Create overlay container if it doesn't exist
+    let overlayContainer = document.getElementById(`overlay-${overlayType}`);
+    if (!overlayContainer) {
+        overlayContainer = document.createElement('div');
+        overlayContainer.id = `overlay-${overlayType}`;
+        overlayContainer.className = 'overlay-container';
+        overlayContainer.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        `;
+        
+        const sceneDisplay = document.getElementById('sceneDisplay');
+        if (sceneDisplay) {
+            sceneDisplay.appendChild(overlayContainer);
+        }
+    }
+    
+    // Clear existing highlights
+    overlayContainer.innerHTML = '';
+    
+    // Create highlights
+    highlights.forEach((highlight, index) => {
+        const highlightElement = createHighlightElement(highlight, overlayType, index);
+        overlayContainer.appendChild(highlightElement);
+    });
+    
+    // Show container
+    overlayContainer.style.display = 'block';
+    console.log(`Displayed ${highlights.length} highlights for ${overlayType}`);
+}
+
+// Hide overlay highlights
+function hideOverlay(overlayType) {
+    const overlayContainer = document.getElementById(`overlay-${overlayType}`);
+    if (overlayContainer) {
+        overlayContainer.style.display = 'none';
+    }
+    
+    // Also hide tactical overlay if it exists
+    hideTacticalOverlay(overlayType);
+}
+
+// Create highlight element
+function createHighlightElement(highlight, overlayType, index) {
+    const element = document.createElement('div');
+    element.className = `highlight highlight-${overlayType}`;
+    
+    // Define threat level colors
+    const colors = {
+        hazard: '#dc3545',    // Red
+        synthesis: '#fd7e14', // Orange
+        mopp: '#ffc107',      // Yellow
+        sampling: '#28a745'   // Green
+    };
+    
+    const color = colors[overlayType] || '#6c757d';
+    
+    element.style.cssText = `
+        position: absolute;
+        left: ${highlight.x}px;
+        top: ${highlight.y}px;
+        width: ${Math.max(highlight.width, 80)}px;
+        height: ${Math.max(highlight.height, 80)}px;
+        border: 3px solid ${color};
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 20px ${color}60;
+        animation: pulse 2s infinite;
+        cursor: pointer;
+        z-index: 10;
+        pointer-events: auto;
+    `;
+    
+    // Add label
+    const label = document.createElement('div');
+    label.className = 'highlight-label';
+    label.textContent = `${highlight.label} (${Math.round(highlight.confidence * 100)}%)`;
+    label.style.cssText = `
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${color};
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    `;
+    
+    element.appendChild(label);
+    
+    // Add click handler
+    element.addEventListener('click', () => {
+        showHighlightDetails(highlight, overlayType);
+    });
+    
+    return element;
+}
+
+// Show highlight details
+function showHighlightDetails(highlight, overlayType) {
+    const details = `
+        <strong>${highlight.label}</strong><br>
+        Type: ${overlayType}<br>
+        Confidence: ${Math.round(highlight.confidence * 100)}%<br>
+        Location: ${highlight.x}, ${highlight.y}
+    `;
+    
+    showAlert(details, 'info', 5000);
+}
+
+// Show alert function
+function showAlert(message, type = 'info', duration = 5000) {
+    // Create alert element
+    const alertElement = document.createElement('div');
+    alertElement.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertElement.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    `;
+    
+    alertElement.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to body
+    document.body.appendChild(alertElement);
+    
+    // Auto dismiss after duration
+    setTimeout(() => {
+        if (alertElement.parentNode) {
+            alertElement.remove();
+        }
+    }, duration);
+}
+
 // Export functions for global access
 window.updateTacticalAnalysis = updateTacticalAnalysis;
 window.toggleTacticalOverlay = toggleTacticalOverlay;
+window.toggleOverlay = toggleOverlay;
 
 // Initialize tactical operations when loaded
 document.addEventListener('DOMContentLoaded', function() {

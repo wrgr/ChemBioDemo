@@ -112,7 +112,7 @@ function demoOverlaySystem() {
     const sceneImage = document.getElementById('sceneImage');
     const uploadArea = document.getElementById('uploadArea');
     
-    if (sceneImage && sceneDisplay) {
+    if (sceneImage && sceneDisplay && uploadArea) {
         // Load demo image
         sceneImage.src = '/uploads/demo_chemical_lab.png';
         sceneImage.style.display = 'block';
@@ -121,28 +121,67 @@ function demoOverlaySystem() {
         uploadArea.style.display = 'none';
         sceneDisplay.style.display = 'block';
         
+        // Add demo mode indicator
+        sceneDisplay.classList.add('demo-mode');
+        
         // Update analysis display
         updateAnalysisDisplay(demoAnalysis.analysis_results);
+        
+        // Create demo overlay highlights
+        createDemoOverlays();
         
         // Automatically show hazard overlays after image loads
         sceneImage.onload = function() {
             setTimeout(() => {
                 console.log('Auto-showing hazard overlays for demo...');
-                toggleOverlay('hazard');
-                
-                // Show other overlays with delays
-                setTimeout(() => toggleOverlay('synthesis'), 2000);
-                setTimeout(() => toggleOverlay('mopp'), 4000);
-                setTimeout(() => toggleOverlay('sampling'), 6000);
+                if (typeof toggleOverlay === 'function') {
+                    toggleOverlay('hazard');
+                    
+                    // Show other overlays with delays
+                    setTimeout(() => toggleOverlay('synthesis'), 2000);
+                    setTimeout(() => toggleOverlay('mopp'), 4000);
+                    setTimeout(() => toggleOverlay('sampling'), 6000);
+                }
             }, 1000);
         };
         
         console.log('Demo overlay system loaded successfully!');
         return true;
     } else {
-        console.error('Scene display elements not found');
+        console.error('Scene display elements not found', {
+            sceneDisplay: !!sceneDisplay,
+            sceneImage: !!sceneImage,
+            uploadArea: !!uploadArea
+        });
         return false;
     }
+}
+
+// Create demo overlay highlights
+function createDemoOverlays() {
+    // Create demo highlights for the chemical lab scene
+    const demoHighlights = {
+        hazard: [
+            { x: 500, y: 250, width: 120, height: 80, label: 'Chemical Containers', confidence: 0.85 },
+            { x: 50, y: 50, width: 200, height: 40, label: 'Ventilation Issue', confidence: 0.78 }
+        ],
+        synthesis: [
+            { x: 300, y: 180, width: 120, height: 80, label: 'Distillation Setup', confidence: 0.72 },
+            { x: 100, y: 200, width: 100, height: 100, label: 'Reaction Vessel', confidence: 0.69 }
+        ],
+        mopp: [
+            { x: 200, y: 150, width: 400, height: 200, label: 'MOPP Level 3 Zone', confidence: 0.88 }
+        ],
+        sampling: [
+            { x: 320, y: 200, width: 20, height: 20, label: 'Sample Point 1', confidence: 0.76 },
+            { x: 520, y: 280, width: 20, height: 20, label: 'Sample Point 2', confidence: 0.82 },
+            { x: 150, y: 250, width: 20, height: 20, label: 'Sample Point 3', confidence: 0.74 }
+        ]
+    };
+    
+    // Store demo highlights globally
+    window.demoHighlights = demoHighlights;
+    console.log('Demo highlights created:', demoHighlights);
 }
 
 // Export for global access

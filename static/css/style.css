@@ -108,6 +108,28 @@ body {
     color: var(--confidence-low);
 }
 
+/* Demo mode indicator */
+.demo-mode {
+    position: relative;
+    border: 2px solid #17a2b8;
+    border-radius: 8px;
+    background: rgba(23, 162, 184, 0.1);
+}
+
+.demo-mode::before {
+    content: "DEMO MODE";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #17a2b8;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 20;
+}
+
 /* Enhanced Image Overlay System for Field Operators */
 .scene-container {
     position: relative;
