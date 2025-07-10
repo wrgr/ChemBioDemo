@@ -118,8 +118,13 @@ def analyze_scene():
     """Analyze uploaded scene"""
     try:
         logger.info("Received analysis request")
-        data = request.get_json()
         
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+            
         if not data:
             logger.error("No data provided in request")
             return jsonify({'error': 'No data provided'}), 400

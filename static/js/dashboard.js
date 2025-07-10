@@ -286,6 +286,12 @@ function submitFile() {
         return;
     }
     
+    // Hide modal first to prevent auto-closing
+    const uploadModal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+    if (uploadModal) {
+        uploadModal.hide();
+    }
+    
     // Show upload progress
     showUploadProgress();
     
@@ -300,9 +306,6 @@ function submitFile() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // Hide modal first
-            uploadModal.hide();
-            
             // Display uploaded file
             displayUploadedFile(data, file);
             
@@ -352,14 +355,18 @@ function startAnalysis(sceneData, description) {
     // Show analysis progress
     showAnalysisProgress();
     
-    // Prepare analysis request
+    // Prepare analysis request - ensure it's valid JSON
     const analysisData = {
-        ...sceneData,
+        file_path: sceneData.file_path || '',
+        file_type: sceneData.file_type || 'image',
+        filename: sceneData.filename || '',
         metadata: {
-            description: description,
+            description: description || '',
             timestamp: new Date().toISOString()
         }
     };
+    
+    console.log('Sending analysis request:', analysisData);
     
     // Send analysis request with timeout
     const controller = new AbortController();
