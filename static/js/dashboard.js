@@ -145,6 +145,70 @@ function uploadFile() {
     uploadModal.show();
 }
 
+function showYouTubeModal() {
+    const youtubeInput = document.getElementById('youtubeInput');
+    youtubeInput.style.display = 'block';
+    document.getElementById('youtubeUrl').focus();
+}
+
+function analyzeYouTube() {
+    const url = document.getElementById('youtubeUrl').value.trim();
+    
+    if (!url) {
+        showAlert('Please enter a YouTube URL', 'warning');
+        return;
+    }
+    
+    // Validate YouTube URL
+    if (!isValidYouTubeUrl(url)) {
+        showAlert('Please enter a valid YouTube URL', 'warning');
+        return;
+    }
+    
+    // Hide upload area and show analysis progress
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('youtubeInput').style.display = 'none';
+    showAnalysisProgress();
+    
+    // Start YouTube analysis
+    startYouTubeAnalysis(url, '');
+}
+
+function isValidYouTubeUrl(url) {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    return youtubeRegex.test(url);
+}
+
+function startYouTubeAnalysis(url, description) {
+    fetch('/api/youtube_analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            youtube_url: url,
+            description: description || ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideAnalysisProgress();
+        
+        if (data.status === 'success') {
+            console.log('YouTube analysis completed:', data.analysis_results);
+            currentAnalysis = data.analysis_results;
+            updateAnalysisDisplay(data.analysis_results);
+        } else {
+            showAlert(data.error || 'YouTube analysis failed', 'danger');
+        }
+    })
+    .catch(error => {
+        hideAnalysisProgress();
+        console.error('YouTube analysis error:', error);
+        showAlert('YouTube analysis failed: ' + error.message, 'danger');
+    });
+}
+
 function previewFile() {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
@@ -584,11 +648,90 @@ function initializeCommandTab() {
 function updateAnalysisDisplay(analysisResults) {
     console.log('Updating analysis display with results:', analysisResults);
     
+    // Update scene summary first (most prominent)
+    updateSceneSummary(analysisResults);
+    
     // Update tactical display
     updateTacticalDisplay(analysisResults);
     
     // Update command display
     updateCommandDisplay(analysisResults);
+}
+
+function updateSceneSummary(analysisResults) {
+    const sceneSummary = document.getElementById('sceneSummary');
+    const sceneSummaryContent = document.getElementById('sceneSummaryContent');
+    
+    if (!analysisResults || analysisResults.status === 'error') {
+        sceneSummary.style.display = 'none';
+        return;
+    }
+    
+    // Show scene summary
+    sceneSummary.style.display = 'block';
+    sceneSummary.className = 'alert alert-info';
+    
+    // Get the most significant findings
+    let summaryHtml = '';
+    
+    // Overall threat level
+    const overallAssessment = analysisResults.agent_analysis?.overall_assessment;
+    if (overallAssessment) {
+        const threatLevel = overallAssessment.threat_level || 'UNKNOWN';
+        const threatBadge = getThreatBadge(threatLevel);
+        summaryHtml += `<div class="mb-2"><strong>Threat Level:</strong> ${threatBadge}</div>`;
+    }
+    
+    // Key findings from synthesis
+    const synthesis = analysisResults.agent_analysis?.synthesis;
+    if (synthesis) {
+        if (synthesis.smoking_guns && synthesis.smoking_guns.length > 0) {
+            summaryHtml += `<div class="mb-2"><strong>Smoking Guns:</strong></div>`;
+            synthesis.smoking_guns.forEach(gun => {
+                summaryHtml += `<div class="ms-3 mb-1">• ${gun.finding} <span class="badge bg-warning">Confidence: ${Math.round(gun.confidence * 100)}%</span></div>`;
+            });
+        }
+        
+        if (synthesis.consensus_findings && synthesis.consensus_findings.length > 0) {
+            summaryHtml += `<div class="mb-2"><strong>Key Findings:</strong></div>`;
+            synthesis.consensus_findings.slice(0, 3).forEach(finding => {
+                summaryHtml += `<div class="ms-3 mb-1">• ${finding}</div>`;
+            });
+        }
+    }
+    
+    // Tactical summary
+    if (analysisResults.tactical_summary) {
+        summaryHtml += `<div class="mb-2"><strong>Tactical Summary:</strong></div>`;
+        summaryHtml += `<div class="ms-3">${analysisResults.tactical_summary}</div>`;
+    }
+    
+    // Immediate actions
+    const actionableIntel = analysisResults.actionable_intelligence;
+    if (actionableIntel && actionableIntel.immediate_actions && actionableIntel.immediate_actions.length > 0) {
+        summaryHtml += `<div class="mb-2 mt-3"><strong>Immediate Actions:</strong></div>`;
+        actionableIntel.immediate_actions.forEach(action => {
+            summaryHtml += `<div class="ms-3 mb-1">• ${action}</div>`;
+        });
+    }
+    
+    if (!summaryHtml) {
+        summaryHtml = '<div class="text-muted">Analysis in progress...</div>';
+    }
+    
+    sceneSummaryContent.innerHTML = summaryHtml;
+}
+
+function getThreatBadge(threatLevel) {
+    const badges = {
+        'CRITICAL': '<span class="badge bg-danger">CRITICAL</span>',
+        'HIGH': '<span class="badge bg-warning">HIGH</span>',
+        'MODERATE': '<span class="badge bg-info">MODERATE</span>',
+        'LOW': '<span class="badge bg-success">LOW</span>',
+        'MINIMAL': '<span class="badge bg-secondary">MINIMAL</span>',
+        'UNKNOWN': '<span class="badge bg-secondary">UNKNOWN</span>'
+    };
+    return badges[threatLevel] || badges['UNKNOWN'];
 }
 
 function updateTacticalDisplay(analysisResults) {

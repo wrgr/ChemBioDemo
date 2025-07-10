@@ -13,6 +13,18 @@ class AgentResult:
     hazard_level: str
     metadata: Dict[str, Any]
     reasoning: str
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert AgentResult to dictionary for JSON serialization"""
+        return {
+            'agent_name': self.agent_name,
+            'confidence': self.confidence,
+            'findings': self.findings,
+            'recommendations': self.recommendations,
+            'hazard_level': self.hazard_level,
+            'metadata': self.metadata,
+            'reasoning': self.reasoning
+        }
 
 class BaseAgent(ABC):
     """Base class for all ChemBio analysis agents"""

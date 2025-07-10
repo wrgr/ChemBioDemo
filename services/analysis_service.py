@@ -237,7 +237,10 @@ class AnalysisService:
             # Calculate individual agent confidences
             confidences = []
             for agent_name, result in agent_data.items():
-                confidence = result.confidence
+                if isinstance(result, dict):
+                    confidence = result.get('confidence', 0.0)
+                else:
+                    confidence = result.confidence
                 metrics['agent_confidences'][agent_name] = confidence
                 confidences.append(confidence)
                 

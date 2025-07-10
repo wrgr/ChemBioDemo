@@ -43,7 +43,7 @@ class AgentCoordinator:
             return {
                 'timestamp': time.time(),
                 'analysis_duration': analysis_time,
-                'agent_results': agent_results,
+                'agent_results': {name: result.to_dict() for name, result in agent_results.items()},
                 'synthesis': synthesis,
                 'unified_recommendations': unified_recommendations,
                 'overall_assessment': overall_assessment,
