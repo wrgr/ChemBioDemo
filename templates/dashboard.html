@@ -53,8 +53,11 @@
                                             Drop files here or click to upload<br>
                                             <small>Supports images and videos (max 50MB)</small>
                                         </p>
-                                        <button class="btn btn-outline-primary" onclick="uploadFile()">
+                                        <button class="btn btn-outline-primary me-2" onclick="uploadFile()">
                                             Choose Files
+                                        </button>
+                                        <button class="btn btn-outline-secondary" onclick="showYouTubeInput()">
+                                            <i class="bi bi-youtube"></i> YouTube
                                         </button>
                                     </div>
                                 </div>
@@ -86,28 +89,30 @@
                                 </div>
                                 
                                 <!-- Scene Image/Video Display -->
-                                <div id="sceneDisplay" class="position-relative" style="display: none;">
-                                    <img id="sceneImage" class="img-fluid rounded w-100" style="max-height: 500px; object-fit: contain;">
-                                    <video id="sceneVideo" class="w-100 rounded" style="max-height: 500px; display: none;" controls>
+                                <div id="sceneDisplay" class="scene-container" style="display: none;">
+                                    <img id="sceneImage" class="scene-image img-fluid rounded w-100" style="max-height: 500px; object-fit: contain;">
+                                    <video id="sceneVideo" class="scene-image w-100 rounded" style="max-height: 500px; display: none;" controls>
                                         Your browser does not support the video tag.
                                     </video>
                                     
-                                    <!-- AI Overlay Controls -->
-                                    <div class="position-absolute top-0 end-0 m-2">
-                                        <div class="btn-group-vertical btn-group-sm">
-                                            <button class="btn btn-outline-light" onclick="toggleOverlay('hazards')" 
-                                                    id="hazardOverlay" title="Toggle Hazard Overlay">
-                                                <i class="bi bi-exclamation-triangle"></i>
-                                            </button>
-                                            <button class="btn btn-outline-light" onclick="toggleOverlay('sampling')" 
-                                                    id="samplingOverlay" title="Toggle Sampling Points">
-                                                <i class="bi bi-droplet"></i>
-                                            </button>
-                                            <button class="btn btn-outline-light" onclick="toggleOverlay('evidence')" 
-                                                    id="evidenceOverlay" title="Toggle Evidence Markers">
-                                                <i class="bi bi-bookmark"></i>
-                                            </button>
-                                        </div>
+                                    <!-- Enhanced AI Overlay Controls -->
+                                    <div class="overlay-controls">
+                                        <button class="overlay-toggle" onclick="toggleOverlay('hazard')" 
+                                                id="hazardOverlay" title="Toggle Hazard Detection">
+                                            <i class="bi bi-exclamation-triangle"></i> Hazards
+                                        </button>
+                                        <button class="overlay-toggle" onclick="toggleOverlay('synthesis')" 
+                                                id="synthesisOverlay" title="Toggle Synthesis Detection">
+                                            <i class="bi bi-flask"></i> Synthesis
+                                        </button>
+                                        <button class="overlay-toggle" onclick="toggleOverlay('mopp')" 
+                                                id="moppOverlay" title="Toggle MOPP Recommendations">
+                                            <i class="bi bi-shield-check"></i> MOPP
+                                        </button>
+                                        <button class="overlay-toggle" onclick="toggleOverlay('sampling')" 
+                                                id="samplingOverlay" title="Toggle Sampling Points">
+                                            <i class="bi bi-droplet"></i> Sampling
+                                        </button>
                                     </div>
                                 </div>
                                 

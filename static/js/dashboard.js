@@ -174,6 +174,12 @@ function analyzeYouTube() {
     startYouTubeAnalysis(url, '');
 }
 
+// Add button to show YouTube input
+function showYouTubeInput() {
+    document.getElementById('youtubeInput').style.display = 'block';
+    document.getElementById('youtubeUrl').focus();
+}
+
 function isValidYouTubeUrl(url) {
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
     return youtubeRegex.test(url);
@@ -764,14 +770,292 @@ function toggleOverlay(overlayType) {
 
 function showOverlay(overlayType) {
     console.log('Showing overlay:', overlayType);
-    // Implementation would depend on the specific overlay type
-    // For now, just log the action
+    
+    if (!currentAnalysis || !currentAnalysis.analysis_results) {
+        console.log('No analysis results available for overlay');
+        return;
+    }
+    
+    const sceneContainer = document.getElementById('sceneDisplay');
+    const sceneImage = document.getElementById('sceneImage');
+    
+    if (!sceneContainer || !sceneImage) {
+        console.log('Scene elements not found');
+        return;
+    }
+    
+    // Create overlay container if it doesn't exist
+    let overlayContainer = sceneContainer.querySelector('.overlay-container');
+    if (!overlayContainer) {
+        overlayContainer = document.createElement('div');
+        overlayContainer.className = 'overlay-container';
+        sceneContainer.appendChild(overlayContainer);
+    }
+    
+    // Clear existing overlays
+    overlayContainer.innerHTML = '';
+    
+    // Generate highlights based on overlay type and analysis results
+    const highlights = generateHighlights(overlayType, currentAnalysis.analysis_results);
+    
+    highlights.forEach(highlight => {
+        const highlightElement = createHighlightElement(highlight);
+        overlayContainer.appendChild(highlightElement);
+    });
 }
 
 function hideOverlay(overlayType) {
     console.log('Hiding overlay:', overlayType);
-    // Implementation would depend on the specific overlay type
-    // For now, just log the action
+    
+    const sceneContainer = document.getElementById('sceneDisplay');
+    const overlayContainer = sceneContainer?.querySelector('.overlay-container');
+    
+    if (overlayContainer) {
+        overlayContainer.innerHTML = '';
+    }
+}
+
+function generateHighlights(overlayType, analysisResults) {
+    const highlights = [];
+    
+    // Generate highlights based on overlay type
+    switch (overlayType) {
+        case 'hazard':
+            highlights.push(...generateHazardHighlights(analysisResults));
+            break;
+        case 'synthesis':
+            highlights.push(...generateSynthesisHighlights(analysisResults));
+            break;
+        case 'mopp':
+            highlights.push(...generateMOPPHighlights(analysisResults));
+            break;
+        case 'sampling':
+            highlights.push(...generateSamplingHighlights(analysisResults));
+            break;
+        default:
+            highlights.push(...generateGenericHighlights(analysisResults));
+    }
+    
+    return highlights;
+}
+
+function generateHazardHighlights(analysisResults) {
+    const highlights = [];
+    
+    // Generate highlights for hazard detection
+    if (analysisResults.agent_analysis?.agent_results?.hazard_detection) {
+        const hazardAgent = analysisResults.agent_analysis.agent_results.hazard_detection;
+        
+        // Create highlights for high-confidence hazards
+        if (hazardAgent.confidence > 0.6) {
+            highlights.push({
+                x: 20, y: 20, width: 120, height: 80,
+                threatLevel: 'critical',
+                label: 'Chemical Hazard',
+                confidence: hazardAgent.confidence,
+                details: hazardAgent.findings.join(', ')
+            });
+        }
+        
+        // Additional hazard regions based on findings
+        hazardAgent.findings.forEach((finding, index) => {
+            if (finding.toLowerCase().includes('chemical') || finding.toLowerCase().includes('toxic')) {
+                highlights.push({
+                    x: 50 + (index * 100), y: 60 + (index * 50), 
+                    width: 100, height: 70,
+                    threatLevel: 'high',
+                    label: 'Toxic Material',
+                    confidence: Math.max(0.5, hazardAgent.confidence - 0.1),
+                    details: finding
+                });
+            }
+        });
+    }
+    
+    return highlights;
+}
+
+function generateSynthesisHighlights(analysisResults) {
+    const highlights = [];
+    
+    if (analysisResults.agent_analysis?.agent_results?.synthesis_analysis) {
+        const synthesisAgent = analysisResults.agent_analysis.agent_results.synthesis_analysis;
+        
+        // Equipment highlights
+        if (synthesisAgent.confidence > 0.5) {
+            highlights.push({
+                x: 30, y: 100, width: 140, height: 90,
+                threatLevel: 'high',
+                label: 'Synthesis Equipment',
+                confidence: synthesisAgent.confidence,
+                details: 'Chemical synthesis apparatus detected'
+            });
+        }
+        
+        // Precursor highlights
+        synthesisAgent.findings.forEach((finding, index) => {
+            if (finding.toLowerCase().includes('precursor') || finding.toLowerCase().includes('equipment')) {
+                highlights.push({
+                    x: 80 + (index * 120), y: 40 + (index * 60), 
+                    width: 110, height: 80,
+                    threatLevel: 'moderate',
+                    label: 'Precursor',
+                    confidence: Math.max(0.4, synthesisAgent.confidence - 0.2),
+                    details: finding
+                });
+            }
+        });
+    }
+    
+    return highlights;
+}
+
+function generateMOPPHighlights(analysisResults) {
+    const highlights = [];
+    
+    if (analysisResults.agent_analysis?.agent_results?.mopp_recommendation) {
+        const moppAgent = analysisResults.agent_analysis.agent_results.mopp_recommendation;
+        
+        // MOPP level areas
+        if (moppAgent.metadata?.mopp_level >= 3) {
+            highlights.push({
+                x: 10, y: 150, width: 160, height: 100,
+                threatLevel: 'critical',
+                label: `MOPP ${moppAgent.metadata.mopp_level}`,
+                confidence: moppAgent.confidence,
+                details: 'High threat environment'
+            });
+        } else if (moppAgent.metadata?.mopp_level >= 2) {
+            highlights.push({
+                x: 60, y: 80, width: 120, height: 80,
+                threatLevel: 'high',
+                label: `MOPP ${moppAgent.metadata.mopp_level}`,
+                confidence: moppAgent.confidence,
+                details: 'Moderate threat environment'
+            });
+        }
+    }
+    
+    return highlights;
+}
+
+function generateSamplingHighlights(analysisResults) {
+    const highlights = [];
+    
+    if (analysisResults.agent_analysis?.agent_results?.sampling_strategy) {
+        const samplingAgent = analysisResults.agent_analysis.agent_results.sampling_strategy;
+        
+        // Priority sampling locations
+        samplingAgent.recommendations.forEach((rec, index) => {
+            if (rec.toLowerCase().includes('sample') || rec.toLowerCase().includes('collect')) {
+                highlights.push({
+                    x: 40 + (index * 80), y: 120 + (index * 40), 
+                    width: 90, height: 60,
+                    threatLevel: 'moderate',
+                    label: 'Sample Point',
+                    confidence: samplingAgent.confidence,
+                    details: rec
+                });
+            }
+        });
+    }
+    
+    return highlights;
+}
+
+function generateGenericHighlights(analysisResults) {
+    const highlights = [];
+    
+    // Generic highlights for overall analysis
+    if (analysisResults.agent_analysis?.synthesis?.smoking_guns) {
+        analysisResults.agent_analysis.synthesis.smoking_guns.forEach((gun, index) => {
+            highlights.push({
+                x: 25 + (index * 100), y: 30 + (index * 70), 
+                width: 130, height: 90,
+                threatLevel: 'critical',
+                label: 'Smoking Gun',
+                confidence: gun.confidence,
+                details: gun.finding
+            });
+        });
+    }
+    
+    return highlights;
+}
+
+function createHighlightElement(highlight) {
+    const highlightDiv = document.createElement('div');
+    highlightDiv.className = `highlight-region threat-${highlight.threatLevel}`;
+    
+    // Position and size
+    highlightDiv.style.left = `${highlight.x}px`;
+    highlightDiv.style.top = `${highlight.y}px`;
+    highlightDiv.style.width = `${highlight.width}px`;
+    highlightDiv.style.height = `${highlight.height}px`;
+    
+    // Create label
+    const labelDiv = document.createElement('div');
+    labelDiv.className = `highlight-label threat-${highlight.threatLevel}`;
+    labelDiv.textContent = highlight.label;
+    
+    // Create confidence indicator
+    const confidenceDiv = document.createElement('div');
+    confidenceDiv.className = `confidence-indicator ${getConfidenceClass(highlight.confidence)}`;
+    confidenceDiv.textContent = `${Math.round(highlight.confidence * 100)}%`;
+    
+    // Add tooltip on hover
+    highlightDiv.title = highlight.details;
+    
+    // Add event listener for click
+    highlightDiv.addEventListener('click', () => {
+        showHighlightDetails(highlight);
+    });
+    
+    highlightDiv.appendChild(labelDiv);
+    highlightDiv.appendChild(confidenceDiv);
+    
+    return highlightDiv;
+}
+
+function getConfidenceClass(confidence) {
+    if (confidence >= 0.8) return 'high';
+    if (confidence >= 0.5) return 'medium';
+    return 'low';
+}
+
+function showHighlightDetails(highlight) {
+    // Show detailed information about the highlight
+    const detailsModal = new bootstrap.Modal(document.getElementById('highlightDetailsModal') || createHighlightDetailsModal());
+    
+    document.getElementById('highlightDetailsTitle').textContent = highlight.label;
+    document.getElementById('highlightDetailsContent').innerHTML = `
+        <p><strong>Threat Level:</strong> ${highlight.threatLevel.toUpperCase()}</p>
+        <p><strong>Confidence:</strong> ${Math.round(highlight.confidence * 100)}%</p>
+        <p><strong>Details:</strong> ${highlight.details}</p>
+    `;
+    
+    detailsModal.show();
+}
+
+function createHighlightDetailsModal() {
+    const modalHtml = `
+        <div class="modal fade" id="highlightDetailsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="highlightDetailsTitle">Highlight Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="highlightDetailsContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    return document.getElementById('highlightDetailsModal');
 }
 
 // Utility functions
@@ -794,8 +1078,11 @@ window.previewFile = previewFile;
 window.submitFile = submitFile;
 window.showYouTubeModal = showYouTubeModal;
 window.analyzeYoutube = analyzeYoutube;
+window.analyzeYouTube = analyzeYouTube;
 window.openCommunicationModal = openCommunicationModal;
 window.sendMessage = sendMessage;
 window.searchKnowledge = searchKnowledge;
 window.toggleOverlay = toggleOverlay;
 window.handleFileSelect = handleFileSelect;
+window.showHighlightDetails = showHighlightDetails;
+window.showYouTubeInput = showYouTubeInput;
