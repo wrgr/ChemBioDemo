@@ -62,10 +62,16 @@ class AnalysisService:
         if 'image_file' in scene_data:
             image_data = self._process_image_file(scene_data['image_file'])
             processed_data['image_data'] = image_data
+        elif 'image_path' in scene_data:
+            image_data = self._process_image_path(scene_data['image_path'])
+            processed_data['image_data'] = image_data
             
         # Handle video data
         if 'video_file' in scene_data:
             video_data = self._process_video_file(scene_data['video_file'])
+            processed_data['video_data'] = video_data
+        elif 'video_path' in scene_data:
+            video_data = self._process_video_path(scene_data['video_path'])
             processed_data['video_data'] = video_data
             
         # Handle YouTube URL
@@ -117,6 +123,34 @@ class AnalysisService:
         except Exception as e:
             self.logger.error(f"Error processing image: {str(e)}")
             return b''
+    
+    def _process_image_path(self, image_path: str) -> bytes:
+        """Process image file from path"""
+        try:
+            # Read image file from path
+            with open(image_path, 'rb') as f:
+                image_data = f.read()
+            
+            # Convert to PIL Image for processing
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Convert to RGB if necessary
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+                
+            # Resize if too large (max 2048x2048)
+            max_size = 2048
+            if image.width > max_size or image.height > max_size:
+                image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+                
+            # Convert back to bytes
+            output = io.BytesIO()
+            image.save(output, format='JPEG', quality=90)
+            return output.getvalue()
+            
+        except Exception as e:
+            self.logger.error(f"Error processing image from path: {str(e)}")
+            return b''
             
     def _process_video_file(self, video_file) -> bytes:
         """Process uploaded video file"""
@@ -127,6 +161,17 @@ class AnalysisService:
             
         except Exception as e:
             self.logger.error(f"Error processing video: {str(e)}")
+            return b''
+    
+    def _process_video_path(self, video_path: str) -> bytes:
+        """Process video file from path"""
+        try:
+            # Read video file from path
+            with open(video_path, 'rb') as f:
+                return f.read()
+            
+        except Exception as e:
+            self.logger.error(f"Error processing video from path: {str(e)}")
             return b''
             
     def _enhance_with_rag_knowledge(self, scene_data: Dict[str, Any]) -> Dict[str, Any]:

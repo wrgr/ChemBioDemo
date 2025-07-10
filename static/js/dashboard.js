@@ -294,7 +294,7 @@ function submitFile() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            hideUploadProgress();
+            // Hide modal first
             uploadModal.hide();
             
             // Display uploaded file
@@ -305,12 +305,16 @@ function submitFile() {
         } else {
             hideUploadProgress();
             showAlert(data.error || 'Upload failed', 'danger');
+            // Show upload area again on error
+            resetUploadArea();
         }
     })
     .catch(error => {
         hideUploadProgress();
         console.error('Upload error:', error);
         showAlert('Upload failed: ' + error.message, 'danger');
+        // Show upload area again on error
+        resetUploadArea();
     });
 }
 
@@ -369,46 +373,66 @@ function startAnalysis(sceneData, description) {
             updateAnalysisDisplay(data.analysis_results);
         } else {
             showAlert(data.error || 'Analysis failed', 'danger');
+            // Show upload area again on analysis failure
+            resetUploadArea();
         }
     })
     .catch(error => {
         hideAnalysisProgress();
         console.error('Analysis error:', error);
         showAlert('Analysis failed: ' + error.message, 'danger');
+        // Show upload area again on analysis failure
+        resetUploadArea();
     });
 }
 
 function showUploadProgress() {
-    // Implementation for upload progress
+    // Hide upload area and show progress
     const uploadArea = document.getElementById('uploadArea');
-    uploadArea.innerHTML = `
-        <div class="d-flex align-items-center justify-content-center">
-            <div class="spinner-border me-2" role="status"></div>
-            <span>Uploading...</span>
-        </div>
-    `;
+    const analysisProgress = document.getElementById('analysisProgress');
+    
+    uploadArea.style.display = 'none';
+    analysisProgress.style.display = 'block';
+    
+    // Update progress text
+    const progressText = analysisProgress.querySelector('span');
+    if (progressText) {
+        progressText.textContent = 'Uploading file...';
+    }
 }
 
 function hideUploadProgress() {
-    // Reset upload area
+    // Hide progress and potentially show upload area again
+    const analysisProgress = document.getElementById('analysisProgress');
+    analysisProgress.style.display = 'none';
+}
+
+function resetUploadArea() {
     const uploadArea = document.getElementById('uploadArea');
-    uploadArea.innerHTML = `
-        <div>
-            <i class="bi bi-cloud-upload display-4 text-muted"></i>
-            <p class="mt-2 text-muted">
-                Drop files here or click to upload<br>
-                <small>Supports images and videos (max 50MB)</small>
-            </p>
-            <button class="btn btn-outline-primary" onclick="uploadFile()">
-                Choose Files
-            </button>
-        </div>
-    `;
+    const sceneDisplay = document.getElementById('sceneDisplay');
+    
+    uploadArea.style.display = 'flex';
+    sceneDisplay.style.display = 'none';
+    
+    // Reset form
+    const fileInput = document.getElementById('fileInput');
+    const sceneDescription = document.getElementById('sceneDescription');
+    const filePreview = document.getElementById('filePreview');
+    
+    if (fileInput) fileInput.value = '';
+    if (sceneDescription) sceneDescription.value = '';
+    if (filePreview) filePreview.style.display = 'none';
 }
 
 function showAnalysisProgress() {
     const progressDiv = document.getElementById('analysisProgress');
     progressDiv.style.display = 'block';
+    
+    // Update progress text
+    const progressText = progressDiv.querySelector('span');
+    if (progressText) {
+        progressText.textContent = 'Analyzing scene...';
+    }
 }
 
 function hideAnalysisProgress() {

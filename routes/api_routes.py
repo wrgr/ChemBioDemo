@@ -98,12 +98,6 @@ def upload_file():
             }
         }
         
-        # Add file data for analysis
-        if is_image:
-            scene_data['image_file'] = open(filepath, 'rb')
-        else:
-            scene_data['video_file'] = open(filepath, 'rb')
-            
         return jsonify({
             'status': 'success',
             'file_id': filename,
@@ -138,13 +132,9 @@ def analyze_scene():
             filepath = data['file_path']
             if os.path.exists(filepath):
                 if data.get('file_type') == 'image':
-                    with open(filepath, 'rb') as f:
-                        scene_data['image_file'] = f
-                        scene_data['image_path'] = filepath
+                    scene_data['image_path'] = filepath
                 elif data.get('file_type') == 'video':
-                    with open(filepath, 'rb') as f:
-                        scene_data['video_file'] = f
-                        scene_data['video_path'] = filepath
+                    scene_data['video_path'] = filepath
                         
         # Handle YouTube URL
         if 'youtube_url' in data:
