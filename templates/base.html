@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ChemBio Defense Dashboard{% endblock %}</title>
+    
+    <!-- Bootstrap CSS with Replit Dark Theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
+                <i class="bi bi-shield-exclamation text-warning me-2"></i>
+                <span class="fw-bold">ChemBio Defense</span>
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="sessionDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        <span id="userTypeDisplay">Tactical</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="switchUserType('tactical')">
+                            <i class="bi bi-person-badge"></i> Tactical Operator
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchUserType('command')">
+                            <i class="bi bi-command"></i> Command Center
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="showSessionInfo()">
+                            <i class="bi bi-info-circle"></i> Session Info
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <div class="nav-item">
+                    <span class="nav-link">
+                        <i class="bi bi-wifi" id="connectionStatus"></i>
+                        <span id="connectionText">Connecting...</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Alert Container -->
+    <div id="alertContainer" class="container-fluid mt-2">
+        <!-- Dynamic alerts will be inserted here -->
+    </div>
+    
+    <!-- Main Content -->
+    <main class="container-fluid py-3">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-center py-3 mt-5">
+        <div class="container">
+            <small class="text-muted">
+                ChemBio Defense Dashboard v1.0.0 | 
+                Session: <span id="sessionId">{{ session_id }}</span> | 
+                <span id="currentTime"></span>
+            </small>
+        </div>
+    </footer>
+    
+    <!-- Modals -->
+    <!-- Session Info Modal -->
+    <div class="modal fade" id="sessionInfoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Session Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Session ID:</strong></div>
+                        <div class="col-sm-8"><code id="modalSessionId"></code></div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4"><strong>User Type:</strong></div>
+                        <div class="col-sm-8"><span id="modalUserType"></span></div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4"><strong>Connection:</strong></div>
+                        <div class="col-sm-8"><span id="modalConnectionStatus"></span></div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4"><strong>Started:</strong></div>
+                        <div class="col-sm-8"><span id="modalSessionStart"></span></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Global variables
+        let socket;
+        let currentSessionId = '{{ session_id }}';
+        let currentUserType = 'tactical';
+        let sessionStartTime = new Date();
+        
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+        
+        function initializeApp() {
+            // Initialize Socket.IO
+            initializeSocket();
+            
+            // Update time display
+            updateTimeDisplay();
+            setInterval(updateTimeDisplay, 1000);
+            
+            // Load session info
+            loadSessionInfo();
+            
+            // Update session display
+            updateSessionDisplay();
+        }
+        
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', function() {
+                console.log('Connected to server');
+                updateConnectionStatus(true);
+            });
+            
+            socket.on('disconnect', function() {
+                console.log('Disconnected from server');
+                updateConnectionStatus(false);
+            });
+            
+            socket.on('connected', function(data) {
+                console.log('Session connected:', data.session_id);
+                currentSessionId = data.session_id;
+                updateSessionDisplay();
+            });
+            
+            socket.on('analysis_update', function(data) {
+                console.log('Analysis update received:', data);
+                if (window.handleAnalysisUpdate) {
+                    window.handleAnalysisUpdate(data);
+                }
+            });
+            
+            socket.on('sensor_update', function(data) {
+                console.log('Sensor update received:', data);
+                if (window.handleSensorUpdate) {
+                    window.handleSensorUpdate(data);
+                }
+            });
+            
+            socket.on('message_received', function(data) {
+                console.log('Message received:', data);
+                if (window.handleMessageReceived) {
+                    window.handleMessageReceived(data);
+                }
+            });
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusIcon = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            
+            if (connected) {
+                statusIcon.className = 'bi bi-wifi text-success';
+                statusText.textContent = 'Connected';
+            } else {
+                statusIcon.className = 'bi bi-wifi-off text-danger';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+        
+        function updateTimeDisplay() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+        }
+        
+        function updateSessionDisplay() {
+            document.getElementById('sessionId').textContent = currentSessionId;
+            document.getElementById('userTypeDisplay').textContent = 
+                currentUserType === 'tactical' ? 'Tactical' : 'Command';
+        }
+        
+        function loadSessionInfo() {
+            fetch('/session')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.session_id) {
+                        currentSessionId = data.session_id;
+                        currentUserType = data.user_type || 'tactical';
+                        updateSessionDisplay();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading session info:', error);
+                });
+        }
+        
+        function switchUserType(userType) {
+            fetch('/session/type', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_type: userType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentUserType = userType;
+                    updateSessionDisplay();
+                    
+                    // Reload page to update interface
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error switching user type:', error);
+                showAlert('Error switching user type', 'danger');
+            });
+        }
+        
+        function showSessionInfo() {
+            document.getElementById('modalSessionId').textContent = currentSessionId;
+            document.getElementById('modalUserType').textContent = 
+                currentUserType === 'tactical' ? 'Tactical Operator' : 'Command Center';
+            document.getElementById('modalConnectionStatus').textContent = 
+                socket && socket.connected ? 'Connected' : 'Disconnected';
+            document.getElementById('modalSessionStart').textContent = 
+                sessionStartTime.toLocaleString();
+                
+            const modal = new bootstrap.Modal(document.getElementById('sessionInfoModal'));
+            modal.show();
+        }
+        
+        function showAlert(message, type = 'info', duration = 5000) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert" id="${alertId}">
+                    <i class="bi bi-info-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
+            
+            // Auto-dismiss after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    const alert = document.getElementById(alertId);
+                    if (alert) {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                        bsAlert.close();
+                    }
+                }, duration);
+            }
+        }
+        
+        // Utility functions
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+        
+        function formatConfidence(confidence) {
+            return (confidence * 100).toFixed(1) + '%';
+        }
+        
+        function getHazardLevelClass(hazardLevel) {
+            switch(hazardLevel) {
+                case 'CRITICAL': return 'text-danger';
+                case 'HIGH': return 'text-warning';
+                case 'MODERATE': return 'text-info';
+                case 'LOW': return 'text-success';
+                default: return 'text-muted';
+            }
+        }
+        
+        function getHazardLevelIcon(hazardLevel) {
+            switch(hazardLevel) {
+                case 'CRITICAL': return 'bi-exclamation-triangle-fill';
+                case 'HIGH': return 'bi-exclamation-triangle';
+                case 'MODERATE': return 'bi-exclamation-circle';
+                case 'LOW': return 'bi-info-circle';
+                default: return 'bi-question-circle';
+            }
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
