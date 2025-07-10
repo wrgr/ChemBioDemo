@@ -52,7 +52,7 @@ class AnalysisService:
             
         except Exception as e:
             self.logger.error(f"Error in scene analysis: {str(e)}")
-            return self._create_error_response(str(e))
+            return self._create_fallback_analysis(session_id, scene_data)
             
     def _preprocess_scene_data(self, scene_data: Dict[str, Any]) -> Dict[str, Any]:
         """Preprocess scene data for analysis"""

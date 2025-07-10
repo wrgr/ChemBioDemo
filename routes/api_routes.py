@@ -117,12 +117,16 @@ def upload_file():
 def analyze_scene():
     """Analyze uploaded scene"""
     try:
+        logger.info("Received analysis request")
         data = request.get_json()
         
         if not data:
+            logger.error("No data provided in request")
             return jsonify({'error': 'No data provided'}), 400
             
+        logger.info(f"Analysis request data: {data}")
         session_id = session.get('session_id', str(uuid.uuid4()))
+        logger.info(f"Session ID: {session_id}")
         
         # Prepare scene data
         scene_data = {}
@@ -135,10 +139,15 @@ def analyze_scene():
                     scene_data['image_path'] = filepath
                 elif data.get('file_type') == 'video':
                     scene_data['video_path'] = filepath
+                logger.info(f"File path set: {filepath}")
+            else:
+                logger.error(f"File not found: {filepath}")
+                return jsonify({'error': f'File not found: {filepath}'}), 404
                         
         # Handle YouTube URL
         if 'youtube_url' in data:
             scene_data['youtube_url'] = data['youtube_url']
+            logger.info(f"YouTube URL set: {data['youtube_url']}")
             
         # Add metadata
         scene_data['metadata'] = data.get('metadata', {})
@@ -148,16 +157,24 @@ def analyze_scene():
         # Add user feedback if provided
         user_feedback = data.get('user_feedback')
         
+        if not scene_data.get('image_path') and not scene_data.get('video_path') and not scene_data.get('youtube_url'):
+            logger.error("No valid scene data provided")
+            return jsonify({'error': 'No valid scene data provided (image, video, or YouTube URL required)'}), 400
+        
+        logger.info("Starting analysis...")
+        
         # Perform analysis
         analysis_results = analysis_service.analyze_scene(
             session_id, scene_data, user_feedback
         )
         
+        logger.info("Analysis completed successfully")
+        
         # Log analysis activity
         audit_service.log_activity(
             action_type='analysis',
             action_details={
-                'scene_type': scene_data.get('file_type', 'unknown'),
+                'scene_type': data.get('file_type', 'unknown'),
                 'analysis_confidence': analysis_results.get('agent_analysis', {}).get('overall_assessment', {}).get('overall_confidence', 0),
                 'has_youtube_url': 'youtube_url' in scene_data
             },
@@ -166,11 +183,14 @@ def analyze_scene():
         )
         
         # Emit real-time update to connected clients
-        socketio.emit('analysis_update', {
-            'session_id': session_id,
-            'analysis_results': analysis_results,
-            'timestamp': time.time()
-        }, room=session_id)
+        try:
+            socketio.emit('analysis_update', {
+                'session_id': session_id,
+                'analysis_results': analysis_results,
+                'timestamp': time.time()
+            }, room=session_id)
+        except Exception as socket_error:
+            logger.warning(f"Failed to emit socket update: {socket_error}")
         
         return jsonify({
             'status': 'success',
@@ -179,7 +199,7 @@ def analyze_scene():
         })
         
     except Exception as e:
-        logger.error(f"Error in scene analysis: {str(e)}")
+        logger.error(f"Error in scene analysis: {str(e)}", exc_info=True)
         return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
 
 @api_bp.route('/youtube_analyze', methods=['POST'])
