@@ -40,6 +40,10 @@ app.register_blueprint(api_bp, url_prefix='/api')
 with app.app_context():
     import models  # noqa: F401
     db.create_all()
+    
+    # Register audit routes
+    from routes.audit_routes import audit_bp
+    app.register_blueprint(audit_bp)
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)

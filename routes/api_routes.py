@@ -10,6 +10,7 @@ import io
 
 from services.analysis_service import AnalysisService
 from services.vector_db import VectorDatabase
+from services.audit_service import audit_service
 from models import Communication, SensorData, db
 from app import socketio
 
@@ -69,6 +70,18 @@ def upload_file():
         filename = f"{timestamp}_{filename}"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
+        
+        # Log upload activity
+        audit_service.log_activity(
+            action_type='upload',
+            action_details={
+                'filename': filename,
+                'file_type': 'image' if is_image else 'video',
+                'file_size': file_size
+            },
+            resource_accessed=filepath,
+            classification_level='internal'
+        )
         
         # Get session ID
         session_id = session.get('session_id', str(uuid.uuid4()))
@@ -148,6 +161,18 @@ def analyze_scene():
         # Perform analysis
         analysis_results = analysis_service.analyze_scene(
             session_id, scene_data, user_feedback
+        )
+        
+        # Log analysis activity
+        audit_service.log_activity(
+            action_type='analysis',
+            action_details={
+                'scene_type': scene_data.get('file_type', 'unknown'),
+                'analysis_confidence': analysis_results.get('agent_analysis', {}).get('overall_assessment', {}).get('overall_confidence', 0),
+                'has_youtube_url': 'youtube_url' in scene_data
+            },
+            resource_accessed=scene_data.get('image_path') or scene_data.get('video_path') or scene_data.get('youtube_url'),
+            classification_level='confidential'
         )
         
         # Emit real-time update to connected clients

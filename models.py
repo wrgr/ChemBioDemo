@@ -50,3 +50,45 @@ class KnowledgeBase(db.Model):
     source = db.Column(db.String(256))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     access_level = db.Column(db.String(16), default='tactical')  # 'tactical', 'command', 'restricted'
+
+class AuditLog(db.Model):
+    """Model for storing audit trail and compliance data"""
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(64), nullable=False)
+    user_type = db.Column(db.String(16), nullable=False)  # 'tactical', 'command'
+    action_type = db.Column(db.String(32), nullable=False)  # 'analysis', 'upload', 'communication', 'data_access'
+    action_details = db.Column(JSON)
+    resource_accessed = db.Column(db.String(256))  # file path, analysis ID, etc.
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))  # IPv4/IPv6 address
+    user_agent = db.Column(db.String(512))
+    outcome = db.Column(db.String(16), default='success')  # 'success', 'failure', 'denied'
+    compliance_flags = db.Column(JSON)  # regulatory compliance markers
+    retention_date = db.Column(db.DateTime)  # data retention policy
+    classification_level = db.Column(db.String(16), default='unclassified')  # security classification
+
+class ComplianceReport(db.Model):
+    """Model for storing compliance reports"""
+    id = db.Column(db.Integer, primary_key=True)
+    report_type = db.Column(db.String(32), nullable=False)  # 'daily', 'weekly', 'monthly', 'incident'
+    report_period_start = db.Column(db.DateTime, nullable=False)
+    report_period_end = db.Column(db.DateTime, nullable=False)
+    report_data = db.Column(JSON)  # aggregated compliance data
+    generated_by = db.Column(db.String(64))  # system or user ID
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(16), default='generated')  # 'generated', 'reviewed', 'approved'
+    compliance_score = db.Column(db.Float)  # overall compliance score
+    findings = db.Column(JSON)  # compliance issues found
+    recommendations = db.Column(JSON)  # compliance recommendations
+
+class DataRetention(db.Model):
+    """Model for tracking data retention policies"""
+    id = db.Column(db.Integer, primary_key=True)
+    data_type = db.Column(db.String(32), nullable=False)  # 'analysis', 'communication', 'sensor_data'
+    retention_period_days = db.Column(db.Integer, nullable=False)
+    data_classification = db.Column(db.String(16))  # security classification
+    regulatory_basis = db.Column(db.String(128))  # legal/regulatory requirement
+    purge_after_days = db.Column(db.Integer)  # automatic purge period
+    archive_location = db.Column(db.String(256))  # archive storage location
+    created_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(16), default='active')  # 'active', 'suspended', 'archived'

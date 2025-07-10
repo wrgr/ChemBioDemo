@@ -52,3 +52,12 @@ def uploaded_file(filename):
     """Serve uploaded files"""
     uploads_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
     return send_from_directory(uploads_dir, filename)
+
+@main_bp.route('/audit')
+def audit_dashboard():
+    """Audit and compliance dashboard"""
+    # Generate session ID if not exists
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    
+    return render_template('audit_dashboard.html', session_id=session['session_id'])

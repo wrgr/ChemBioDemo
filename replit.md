@@ -43,16 +43,21 @@ The application uses a multi-agent architecture with specialized agents:
 - **Communication**: Manages tactical-command communication with message types
 - **SensorData**: Stores sensor readings with alert levels
 - **KnowledgeBase**: RAG knowledge base entries with embeddings
+- **AuditLog**: Activity logging for compliance and security tracking
+- **ComplianceReport**: Generated compliance reports with scores and findings
+- **DataRetention**: Data retention policies and compliance tracking
 
 ### Services
 - **AnalysisService**: Coordinates scene analysis with agent system
 - **GeminiService**: Handles Google Gemini API interactions
 - **VectorDatabase**: Manages ChromaDB for knowledge retrieval
+- **AuditService**: Comprehensive audit trail and compliance management
 
 ### User Interface
 - **Tactical View**: Field operator interface for immediate threat assessment
 - **Command Center View**: Strategic overview with comprehensive analysis
 - **Real-time Communication**: Bidirectional messaging between tactical and command
+- **Audit Dashboard**: Comprehensive compliance monitoring and reporting interface
 
 ## Data Flow
 
